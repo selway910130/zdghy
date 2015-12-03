@@ -7,6 +7,9 @@
 //
 
 #import "AppDelegate.h"
+#import "SVProgressHUD.h"
+
+
 
 @implementation AppDelegate
 
@@ -41,6 +44,35 @@
 - (void)applicationWillTerminate:(UIApplication *)application
 {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+}
+
++ (NSDictionary*) connectToServer:(NSString *)post :(NSURL *)url
+{
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
+    NSLog(@"%@", post);
+    NSData *postData = [post dataUsingEncoding:NSUTF8StringEncoding allowLossyConversion:YES];
+    NSString *postLength = [NSString stringWithFormat:@"%d", [postData length]];
+    [request setURL:url];
+    [request setHTTPMethod:@"POST"];
+    [request setValue:postLength forHTTPHeaderField:@"Content-Length"];
+    [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
+    [request setHTTPBody:postData];
+    NSHTTPURLResponse *response = nil;
+    NSError *error = [[NSError alloc]init];
+    NSData *urlData = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
+
+    NSDictionary *searchResult;
+    
+    if ([response statusCode] >= 200 && [response statusCode] < 300){
+        searchResult = [NSJSONSerialization JSONObjectWithData:urlData options:   NSJSONReadingMutableLeaves error:&error];
+    }
+    else{
+        [SVProgressHUD show];
+        [SVProgressHUD dismissWithError:@"网络连接错误"];
+        searchResult = nil;
+    }
+    return searchResult;
 }
 
 @end
